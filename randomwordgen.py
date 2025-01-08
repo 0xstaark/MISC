@@ -1,30 +1,68 @@
-#!/usr/bin/python3
-
-
 import random
 import requests
 
+# URLs for word lists
+ADJECTIVES_URL = 'https://raw.githubusercontent.com/0xstaark/MISC/main/adjectives.txt'
+ANIMALS_URL = 'https://raw.githubusercontent.com/0xstaark/MISC/main/animals.txt'
 
-url_adjectives = 'https://raw.githubusercontent.com/0xstaark/test/main/adjectives.txt'
+def fetch_word_list(url):
+    # Fetch a word list from the provided URL.
+    try:
+        response = requests.get(url)
+        response.raise_for_status()  # Raise an error for bad responses
+        return response.text.split()
+    except requests.RequestException:
+        print(f"Error: Unable to retrieve words from {url}")
+        exit()
 
-url_animals = 'https://raw.githubusercontent.com/0xstaark/test/main/animals.txt'
+def generate_engagement_name(adjectives, animals):
+    # Generate a random engagement name using an adjective and an animal.
+    return f"{random.choice(adjectives)} {random.choice(animals)}"
 
-try:
-    response_adjectives = requests.get(url_adjectives)
-    adjectives = response_adjectives.text.split()
+def prompt_for_number(prompt, default):
+    # Prompt the user for a number with a default value.
+    user_input = input(prompt).strip()
+    if not user_input:
+        return default
+    try:
+        return int(user_input)
+    except ValueError:
+        print("Invalid input. Using default.")
+        return default
 
-    response_animals = requests.get(url_animals)
-    animals = response_animals.text.split()
-except:
-    print('Error: Unable to retrieve words from remote source')
-    exit()
+def prompt_for_yes_no(count):
+    # Prompt the user for a strict yes or no input.
+    while True:
+        user_input = input(f"Would you like to generate {count} more names? (Press ENTER to generate, 'n' to exit): ").strip().lower()
+        if user_input in ['n', '']:
+            return user_input
+        print("Invalid input. Please press ENTER to generate or enter 'n' to exit.")
 
-adjective = random.choice(adjectives)
-animal = random.choice(animals)
+def main():
+    # Fetch word lists
+    adjectives = fetch_word_list(ADJECTIVES_URL)
+    animals = fetch_word_list(ANIMALS_URL)
 
-newword = input('Would you like to generate a new word? (y/n): ')
-while newword.lower() != 'n':
-    adjective = random.choice(adjectives)
-    animal = random.choice(animals)
-    print(f'Your engagement name is: {adjective} {animal}\n')
-    newword = input('Would you like to generate a new word? (y/n): ')
+    # Get the number of names to generate
+    default_count = 5
+    count = prompt_for_number(f"How many engagement names would you like to generate? (default is {default_count}): ", default_count)
+
+    # Generate and display the requested number of names
+    print("\n##########################\nGenerated Engagement Names\n##########################\n")
+    for i in range(count):
+        print(f"[+] {generate_engagement_name(adjectives, animals)}")
+        print()
+
+    # Allow interactive generation of additional names
+    while True:
+        user_input = prompt_for_yes_no(count)
+        if user_input == 'n':
+            print("Thank you for using the name generator. Goodbye!")
+            break
+        else:  # If user presses ENTER
+            print("\n##########################\nGenerated Engagement Names\n##########################\n")
+            for _ in range(count):
+                print(f"[+] {generate_engagement_name(adjectives, animals)}\n")
+
+if __name__ == "__main__":
+    main()
